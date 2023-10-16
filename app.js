@@ -91,7 +91,7 @@ gif.setAttribute('loop', '');
 gif.setAttribute('muted', '');
 gif.setAttribute('autoplay', '');
 // gif.src = './vid.mp4';
-gif.src = './2.mp4';
+gif.src = './6.mp4';
 
 
 const canvas = document.createElement('canvas');
