@@ -257,7 +257,8 @@ function getSteam(deviceId) {
 
     navigator.mediaDevices.getUserMedia({
         video: option
-    }, function (stream) {
+    })
+    .then( (stream) => {
         tracks = stream.getTracks();
         console.log('tracks', tracks)
         
@@ -279,12 +280,12 @@ function getSteam(deviceId) {
             
         };
         camVideo.srcObject = stream;
-
-
-    }, function (e) {
+    })
+    .error(e => {
         console.log(e);
         Alert.print('카메라 소스를 가져오지 못했습니다. \n' + e);
-    });
+    })
+
 }
 
 const camCavnas = document.createElement('canvas');
