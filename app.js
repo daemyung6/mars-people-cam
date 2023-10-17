@@ -1,5 +1,5 @@
 import * as Alert from './Alert.js';
-const isDev = false;
+const isDev = true;
 
 const mainDiv = document.getElementsByClassName('root')[0];
 
@@ -255,7 +255,7 @@ function getSteam(deviceId) {
         option.deviceId = deviceId;
     }
 
-    navigator.getUserMedia({
+    navigator.mediaDevices.getUserMedia({
         video: option
     }, function (stream) {
         tracks = stream.getTracks();
@@ -268,11 +268,13 @@ function getSteam(deviceId) {
             return;
         }
 
+
         camVideo.onloadedmetadata = () => {
             console.log(
                 camVideo.videoWidth,
                 camVideo.videoHeight,
             )
+            camVideo.load();
             camVideo.play();
             
         };
