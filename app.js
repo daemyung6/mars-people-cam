@@ -158,6 +158,7 @@ mainDiv.appendChild(setting)
 
 window.addEventListener('DOMContentLoaded', () => {
     init()
+    document.documentElement.scrollTop = 0;
 })
 
 function init() {
