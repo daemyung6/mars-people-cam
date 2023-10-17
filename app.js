@@ -14,8 +14,9 @@ setting.appendChild((() => {
 
 let select = document.createElement('select');
 select.addEventListener('change', () => {
-    getSteam( deviceDatas[Number(setting.value)].deviceId);
+    getSteam(deviceDatas[Number(select.value)].deviceId);
 })
+
 setting.appendChild(select)
 setting.appendChild((() => {
     return document.createElement('br');
@@ -26,7 +27,7 @@ const width = 1920;
 const height = 1080;
 //rgb
 const colormargins = [30, 100, 30];
-const greenColors = [0, 0, 0] 
+const greenColors = [0, 0, 0]
 
 
 for (let i = 0; i < colormargins.length; i++) {
@@ -38,18 +39,18 @@ for (let i = 0; i < colormargins.length; i++) {
         input.setAttribute('min', '0')
 
         input.value = colormargins[i]
-    
+
         input.addEventListener('change', () => {
             colormargins[id] = Number(input.value)
             console.log(colormargins)
         })
-        
+
         return input;
     })())
     setting.appendChild((() => {
         return document.createElement('br');
     })())
-    
+
 }
 
 
@@ -58,6 +59,8 @@ for (let i = 0; i < colormargins.length; i++) {
 // document.body.appendChild(gif);
 
 const gif = document.createElement('video')
+// document.body.appendChild(gif)
+
 window.gif = gif;
 function getGifCenterColor() {
     const canvas = document.createElement('canvas')
@@ -66,10 +69,10 @@ function getGifCenterColor() {
 
     const ctx = canvas.getContext('2d');
     ctx.drawImage(gif, 0, 0)
-    
+
     let center = ctx.getImageData(width / 2, height / 2, 1, 1);
 
-    if(
+    if (
         (center.data[0] === 0) &&
         (center.data[1] === 0) &&
         (center.data[2] === 0)
@@ -102,8 +105,7 @@ ctx.globalCompositeOperation = 'copy';
 mainDiv.appendChild(canvas);
 
 const camVideo = document.createElement('video');
-camVideo.width = width;
-camVideo.height = height;
+// document.body.appendChild(camVideo)
 camVideo.setAttribute('autoplay', '');
 
 
@@ -116,11 +118,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 let isDraw = false;
 function init() {
-    if(!isDraw) {
+    if (!isDraw) {
         draw();
         isDraw = true;
     }
-    
+
     select.innerHTML = null
     getDevice();
     getSteam();
@@ -131,38 +133,51 @@ function init() {
 let deviceDatas = [];
 let isPermission = true;
 function getDevice() {
+    deviceDatas = [];
+
+    select.innerHTML = null
+    select.appendChild((() => {
+        let op = document.createElement('option');
+        op.innerText = '-- select camera --'
+        op.setAttribute('disabled', '')
+        op.setAttribute('selected', '')
+        return op
+    })())
+
     try {
-        deviceDatas = [];
         navigator.mediaDevices.enumerateDevices()
-        .then((devices) => {
-            let count = 0;
-            for (let i = 0; i < devices.length; i++) {
-                console.log(devices[i])
-                
-                if(devices[i].kind !== 'videoinput') {
-                    continue;
-                }
-                if(devices[i].deviceId.length === 0) {
-                    isPermission = false;
-                    console.log('isPermission', isPermission)
-                    return;
+            .then((devices) => {
+                let count = 0;
+                for (let i = 0; i < devices.length; i++) {
+
+                    if (devices[i].kind !== 'videoinput') {
+                        continue;
+                    }
+                    if (devices[i].deviceId.length === 0) {
+                        isPermission = false;
+                        console.log('isPermission', isPermission)
+                        return;
+                    }
+
+                    deviceDatas.push(devices[i])
                 }
 
-                deviceDatas.push(devices[i])
+                if (!isPermission) { return; }
 
-                select.appendChild((() => {
-                    let option = document.createElement('option');
-                    option.innerText = devices[i].label;
-                    option.value = count
-                    count++;
-                    return option;
-                })())
-            }
-        })
-        .catch((e) => {
-            console.log(e)
-            Alert.print('장치목록을 가져오지 못했습니다.')
-        });
+                for (let i = 0; i < deviceDatas.length; i++) {
+                    select.appendChild((() => {
+                        let option = document.createElement('option');
+                        option.innerText = deviceDatas[i].label;
+                        option.value = count
+                        count++;
+                        return option;
+                    })())
+                }
+            })
+            .catch((e) => {
+                console.log(e)
+                Alert.print('장치목록을 가져오지 못했습니다.\n' + e)
+            });
     } catch (error) {
         console.log(error)
         Alert.print('장치목록을 가져오지 못했습니다.')
@@ -171,53 +186,81 @@ function getDevice() {
 let isSetSteam = false;
 function getSteam(deviceId) {
     const option = {
-        width : width,
-        height : height
+        width: width,
+        height: height
     }
 
-    if(typeof deviceId === 'string') {
+    if (typeof deviceId === 'string') {
         option.deviceId = deviceId;
     }
 
     navigator.getUserMedia({
         video: option
-    }, function(stream) {
+    }, function (stream) {
         console.log('getUserMedia')
-        if(!isPermission) {
+        if (!isPermission) {
             init();
             isPermission = true;
             return;
         }
 
         isSetSteam = true;
+        camVideo.onloadedmetadata = () => {
+            console.log(
+                camVideo.videoWidth,
+                camVideo.videoHeight,
+            )
+            camVideo.play();
+
+            gif.load()
+            gif.play()
+        };
         camVideo.srcObject = stream;
-    }, function(e) {
+
+
+    }, function (e) {
         console.log(e);
-        Alert.print(e);
+        Alert.print('카메라 소스를 가져오지 못했습니다. \n' + e);
     });
 }
 
 
 function draw() {
-    ctx.drawImage(gif, 0, 0)
-    let imgdata = ctx.getImageData(0, 0, width, height);
     ctx.clearRect(0, 0, width, height);
 
-    if(!camVideo.paused) {
-        ctx.drawImage(camVideo, 0, 0)
+
+    ctx.drawImage(
+        gif, 
+        0, 0, 
+        gif.videoWidth, gif.videoHeight, 
+        0, 0,
+        width, height
+    )
+    let imgdata = ctx.getImageData(0, 0, width, height);
+
+    ctx.clearRect(0, 0, width, height);
+
+    if (!camVideo.paused) {
+        ctx.drawImage(
+            camVideo, 
+            0, 0, 
+            camVideo.videoWidth, camVideo.videoHeight, 
+            0, 0,
+            width, height
+        )
         let videoImageData = ctx.getImageData(0, 0, width, height);
         ctx.clearRect(0, 0, width, height);
-    
+
         for (let i = 0; i < width * height * 4; i += 4) {
-            if(
-                ((greenColors[0] - colormargins[0]) <= imgdata.data[i + 0] ) &&
-                (imgdata.data[i + 0] <= (greenColors[0] + colormargins[0]) ) &&
-    
-                ((greenColors[1] - colormargins[1]) <= imgdata.data[i + 1] ) &&
-                (imgdata.data[i + 1] <= (greenColors[1] + colormargins[1]) ) &&
-    
-                ((greenColors[2] - colormargins[2]) <= imgdata.data[i + 2] ) &&
-                (imgdata.data[i + 2] <= (greenColors[2] + colormargins[2]) )
+            if (
+                ((greenColors[0] - colormargins[0]) <= imgdata.data[i + 0]) &&
+                (imgdata.data[i + 0] <= (greenColors[0] + colormargins[0])) &&
+
+                ((greenColors[1] - colormargins[1]) <= imgdata.data[i + 1]) &&
+                (imgdata.data[i + 1] <= (greenColors[1] + colormargins[1])) &&
+
+                ((greenColors[2] - colormargins[2]) <= imgdata.data[i + 2]) &&
+                (imgdata.data[i + 2] <= (greenColors[2] + colormargins[2]))
             ) {
                 imgdata.data[i + 0] = videoImageData.data[i + 0]
                 imgdata.data[i + 1] = videoImageData.data[i + 1]
@@ -225,7 +268,7 @@ function draw() {
             }
         }
     }
-    
+
 
     ctx.putImageData(imgdata, 0, 0)
 
