@@ -176,13 +176,14 @@ mainDiv.appendChild(setting)
 
 window.addEventListener('DOMContentLoaded', () => {
     init()
-    document.documentElement.scrollTop = 0;
 })
 
 function init() {
     select.innerHTML = null
     getDevice();
     getSteam();
+
+    document.documentElement.scrollTop = 0;
 }
 
 
@@ -281,7 +282,7 @@ function getSteam(deviceId) {
         };
         camVideo.srcObject = stream;
     })
-    .error(e => {
+    .catch(e => {
         console.log(e);
         Alert.print('카메라 소스를 가져오지 못했습니다. \n' + e);
     })
