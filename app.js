@@ -1,7 +1,7 @@
 import * as Alert from './Alert.js';
 const isDev = false;
 
-const mainDiv = document.getElementsByClassName('main')[0];
+const mainDiv = document.getElementsByClassName('root')[0];
 
 function addRangeInput(name, value, min, max, onChange) {
     setting.appendChild((() => {
@@ -45,6 +45,22 @@ select.addEventListener('input', () => {
 })
 
 setting.appendChild(select)
+
+
+
+
+let saveButton = document.createElement('button');
+saveButton.innerText = '촬영'
+setting.appendChild(saveButton)
+
+const saveATag = document.createElement('a');
+saveATag.download = 'image.png';
+
+saveButton.addEventListener('click', () => {
+    saveATag.href = canvas.toDataURL('image/png')
+    saveATag.click();
+})
+
 setting.appendChild((() => {
     return document.createElement('br');
 })())
@@ -154,6 +170,8 @@ if(isDev) {
 
 
 mainDiv.appendChild(setting)
+
+
 
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -333,3 +351,5 @@ function draw() {
 if(isDev) {
     window.draw = draw;
 }
+
+
