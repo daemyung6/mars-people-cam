@@ -1,5 +1,5 @@
 import * as Alert from './Alert.js';
-const isDev = true;
+const isDev = false;
 
 const mainDiv = document.getElementsByClassName('root')[0];
 
