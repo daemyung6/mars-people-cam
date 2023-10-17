@@ -1,8 +1,35 @@
 import * as Alert from './Alert.js';
+const isDev = false;
 
-const mainDiv = document.createElement('div');
-mainDiv.classList.add('main');
-document.body.appendChild(mainDiv)
+const mainDiv = document.getElementsByClassName('main')[0];
+
+function addRangeInput(name, value, min, max, onChange) {
+    setting.appendChild((() => {
+        let span = document.createElement('span');
+        span.innerText = name + ': ';
+        span.classList.add('colorLabel');
+
+        return span
+    })())
+    setting.appendChild((() => {
+        let input = document.createElement('input');
+        input.setAttribute('type', 'range')
+        input.setAttribute('max', max)
+        input.setAttribute('min', min)
+
+        input.value = value
+
+        input.addEventListener('change', (e) => {
+            onChange(e);
+        })
+
+        return input;
+    })())
+    setting.appendChild((() => {
+        return document.createElement('br');
+    })())
+}
+
 
 let setting = document.createElement('div');
 
@@ -13,7 +40,7 @@ setting.appendChild((() => {
 })())
 
 let select = document.createElement('select');
-select.addEventListener('change', () => {
+select.addEventListener('input', () => {
     getSteam(deviceDatas[Number(select.value)].deviceId);
 })
 
@@ -26,62 +53,82 @@ setting.appendChild((() => {
 const width = 1920;
 const height = 1080;
 //rgb
+const colormarginsLabel = ['red', 'green', 'blue']
 const colormargins = [30, 100, 30];
 const greenColors = [0, 0, 0]
 
 
+setting.appendChild((() => {
+    return document.createElement('br');
+})())
+
+setting.appendChild((() => {
+    let div = document.createElement('div');
+    div.innerText = 'color sensitivity'
+    return div;
+})())
+
 for (let i = 0; i < colormargins.length; i++) {
-    setting.appendChild((() => {
-        const id = i;
-        let input = document.createElement('input');
-        input.setAttribute('type', 'range')
-        input.setAttribute('max', '255')
-        input.setAttribute('min', '0')
+    const id = i;
+    addRangeInput(colormarginsLabel[i], colormargins[i], 0, 255, (e) => {
+        colormargins[id] = Number(e.target.value)
+    })
+}
 
-        input.value = colormargins[i]
+let gifIndex = 0;
+let gifFrames = [];
+let gifFramesNum = 3
+let gifFramesLoadCount = 0;
+let speed = 3;
 
-        input.addEventListener('change', () => {
-            colormargins[id] = Number(input.value)
-            console.log(colormargins)
-        })
+for (let i = 0; i < gifFramesNum; i++) {
+    let img = document.createElement('img');
+    img.addEventListener('load', () => {
+        gifFramesLoadCount++;
 
-        return input;
-    })())
-    setting.appendChild((() => {
-        return document.createElement('br');
-    })())
+        if(gifFramesLoadCount === gifFramesNum) {
+            onLoadFrames();
+        }
+    })
+    img.src = `./frame-${i + 1}.png`;
+    gifFrames.push(img);
+}
 
+setting.appendChild((() => {
+    return document.createElement('br');
+})())
+
+addRangeInput('speed', speed, 1, 60, (e) => {
+    speed = Number(e.target.value)
+    console.log(speed)
+})
+
+function gifNextFrame() {
+    gifIndex++
+    if(gifIndex >= 3) {
+        gifIndex = 0;
+    }
+
+    setTimeout(gifNextFrame, 1000 / speed)
+}
+
+function onLoadFrames() {
+    gifNextFrame();
+    getGifCenterColor();
+    draw();
 }
 
 
-// const gif = document.createElement('img')
-// gif.src = './1.gif';
-// document.body.appendChild(gif);
 
-const gif = document.createElement('video')
-// document.body.appendChild(gif)
-
-window.gif = gif;
 function getGifCenterColor() {
     const canvas = document.createElement('canvas')
     canvas.width = width;
     canvas.height = height;
 
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(gif, 0, 0)
+    ctx.drawImage(gifFrames[0], 0, 0)
 
     let center = ctx.getImageData(width / 2, height / 2, 1, 1);
-
-    if (
-        (center.data[0] === 0) &&
-        (center.data[1] === 0) &&
-        (center.data[2] === 0)
-    ) {
-        setTimeout(() => {
-            getGifCenterColor();
-        }, 1000)
-        return;
-    }
 
     greenColors[0] = center.data[0]
     greenColors[1] = center.data[1]
@@ -89,12 +136,6 @@ function getGifCenterColor() {
 
     console.log('set green color: ', greenColors)
 }
-getGifCenterColor();
-gif.setAttribute('loop', '');
-gif.setAttribute('muted', '');
-gif.setAttribute('autoplay', '');
-// gif.src = './vid.mp4';
-gif.src = './6.mp4';
 
 
 const canvas = document.createElement('canvas');
@@ -105,8 +146,11 @@ ctx.globalCompositeOperation = 'copy';
 mainDiv.appendChild(canvas);
 
 const camVideo = document.createElement('video');
-// document.body.appendChild(camVideo)
 camVideo.setAttribute('autoplay', '');
+if(isDev) {
+    document.body.appendChild(camVideo)
+    window.camVideo = camVideo;
+}
 
 
 mainDiv.appendChild(setting)
@@ -116,13 +160,7 @@ window.addEventListener('DOMContentLoaded', () => {
     init()
 })
 
-let isDraw = false;
 function init() {
-    if (!isDraw) {
-        draw();
-        isDraw = true;
-    }
-
     select.innerHTML = null
     getDevice();
     getSteam();
@@ -180,15 +218,19 @@ function getDevice() {
             });
     } catch (error) {
         console.log(error)
-        Alert.print('장치목록을 가져오지 못했습니다.')
+        Alert.print('장치목록을 가져오지 못했습니다.\n' + error)
     }
 }
-let isSetSteam = false;
+
+
+let tracks;
 function getSteam(deviceId) {
-    const option = {
-        width: width,
-        height: height
+    if(typeof tracks !== 'undefined') {
+        for (let i = 0; i < tracks.length; i++) {
+            tracks[i].stop();
+        }
     }
+    const option = {}
 
     if (typeof deviceId === 'string') {
         option.deviceId = deviceId;
@@ -197,6 +239,9 @@ function getSteam(deviceId) {
     navigator.getUserMedia({
         video: option
     }, function (stream) {
+        tracks = stream.getTracks();
+        console.log('tracks', tracks)
+        
         console.log('getUserMedia')
         if (!isPermission) {
             init();
@@ -204,16 +249,13 @@ function getSteam(deviceId) {
             return;
         }
 
-        isSetSteam = true;
         camVideo.onloadedmetadata = () => {
             console.log(
                 camVideo.videoWidth,
                 camVideo.videoHeight,
             )
             camVideo.play();
-
-            gif.load()
-            gif.play()
+            
         };
         camVideo.srcObject = stream;
 
@@ -224,15 +266,23 @@ function getSteam(deviceId) {
     });
 }
 
+const camCavnas = document.createElement('canvas');
+camCavnas.width = width;
+camCavnas.height = height;
+const camContext = camCavnas.getContext('2d');
+if(isDev) {
+    document.body.appendChild(camCavnas)
+}
+
 
 function draw() {
     ctx.clearRect(0, 0, width, height);
 
 
     ctx.drawImage(
-        gif, 
+        gifFrames[gifIndex], 
         0, 0, 
-        gif.videoWidth, gif.videoHeight, 
+        width, height, 
         0, 0,
         width, height
     )
@@ -241,14 +291,19 @@ function draw() {
     ctx.clearRect(0, 0, width, height);
 
     if (!camVideo.paused) {
-        ctx.drawImage(
+        let newHeight = camVideo.videoHeight * (width / camVideo.videoWidth);
+        camContext.drawImage(
             camVideo, 
+
             0, 0, 
             camVideo.videoWidth, camVideo.videoHeight, 
-            0, 0,
-            width, height
+
+            0,
+            (height - newHeight) / 2,
+
+            width, newHeight
         )
-        let videoImageData = ctx.getImageData(0, 0, width, height);
+        let videoImageData = camContext.getImageData(0, 0, width, height);
         ctx.clearRect(0, 0, width, height);
 
         for (let i = 0; i < width * height * 4; i += 4) {
@@ -274,4 +329,6 @@ function draw() {
 
     requestAnimationFrame(draw);
 }
-window.draw = draw;
+if(isDev) {
+    window.draw = draw;
+}

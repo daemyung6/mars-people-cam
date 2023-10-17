@@ -8,7 +8,7 @@ html, body {
 
 .main {
     width: 100%;
-    max-width: 1920px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -20,7 +20,28 @@ html, body {
     width: 100%;
     padding-top: 5px;
 }
-video {
+video, canvas {
     width: 100%;
     height: unset;
+}
+.colorLabel {
+    width: 60px;
+    display: inline-block;
+}
+.description {
+    padding: 5px;
+    width: calc(100% - 10px);
+    margin-top: 30px;
+}
+h1, h2 {
+    margin: 40px 0 10px 0;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #00000026;
+}
+
+.videoBox {
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 1920 / 1080;
+
 }
