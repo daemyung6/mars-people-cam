@@ -74,22 +74,18 @@ const colormargins = [30, 100, 30];
 const greenColors = [0, 0, 0]
 
 
-setting.appendChild((() => {
-    return document.createElement('br');
-})())
+// setting.appendChild((() => {
+//     let div = document.createElement('div');
+//     div.innerText = 'color sensitivity'
+//     return div;
+// })())
 
-setting.appendChild((() => {
-    let div = document.createElement('div');
-    div.innerText = 'color sensitivity'
-    return div;
-})())
-
-for (let i = 0; i < colormargins.length; i++) {
-    const id = i;
-    addRangeInput(colormarginsLabel[i], colormargins[i], 0, 255, (e) => {
-        colormargins[id] = Number(e.target.value)
-    })
-}
+// for (let i = 0; i < colormargins.length; i++) {
+//     const id = i;
+//     addRangeInput(colormarginsLabel[i], colormargins[i], 0, 255, (e) => {
+//         colormargins[id] = Number(e.target.value)
+//     })
+// }
 
 let gifIndex = 0;
 let gifFrames = [];
@@ -106,7 +102,9 @@ for (let i = 0; i < gifFramesNum; i++) {
             onLoadFrames();
         }
     })
-    img.src = `./frame-${i + 1}.png`;
+    // img.src = `./frame-${i + 1}.png`;
+    img.src = `./img-${i + 1}.png`;
+    // document.body.appendChild(img)
     gifFrames.push(img);
 }
 
@@ -130,7 +128,7 @@ function gifNextFrame() {
 
 function onLoadFrames() {
     gifNextFrame();
-    getGifCenterColor();
+    // getGifCenterColor();
     draw();
 }
 
@@ -158,7 +156,6 @@ const canvas = document.createElement('canvas');
 canvas.width = width;
 canvas.height = height;
 const ctx = canvas.getContext('2d');
-ctx.globalCompositeOperation = 'copy';
 mainDiv.appendChild(canvas);
 
 const camVideo = document.createElement('video');
@@ -272,13 +269,9 @@ function getSteam(deviceId) {
 
 
         camVideo.onloadedmetadata = () => {
-            console.log(
-                camVideo.videoWidth,
-                camVideo.videoHeight,
-            )
             camVideo.load();
             camVideo.play();
-            
+            camVideo.onloadedmetadata = undefined
         };
         camVideo.srcObject = stream;
     })
@@ -297,7 +290,7 @@ if(isDev) {
     document.body.appendChild(camCavnas)
 }
 
-
+/*
 function draw() {
     ctx.clearRect(0, 0, width, height);
 
@@ -355,5 +348,34 @@ function draw() {
 if(isDev) {
     window.draw = draw;
 }
+*/
 
+function draw() {
+    ctx.clearRect(0, 0, width, height); 
+    if (!camVideo.paused) {
 
+        let newHeight = camVideo.videoHeight * (width / camVideo.videoWidth);
+        
+        ctx.drawImage(
+            camVideo, 
+
+            0, 0, 
+            camVideo.videoWidth, camVideo.videoHeight, 
+
+            0,
+            (height - newHeight) / 2,
+
+            width, newHeight
+        )
+    }
+
+    ctx.drawImage(
+        gifFrames[gifIndex], 
+        0, 0, 
+        width, height, 
+        0, 0,
+        width, height
+    )
+
+    requestAnimationFrame(draw);
+}
